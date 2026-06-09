@@ -419,9 +419,6 @@
   }
 
   function fmt(n) {
-    if (Math.abs(n) >= 1000) {
-      return '$' + Math.round(n).toLocaleString('en-US');
-    }
     return '$' + Math.round(n).toLocaleString('en-US');
   }
 
@@ -481,7 +478,7 @@
       $('mao').textContent = fmt(mao);
       $('mao-sub').textContent = purchase > 0
         ? (purchase <= mao ? `${fmt(mao - purchase)} under MAO` : `${fmt(purchase - mao)} over MAO`)
-        : '70% Rule';
+        : '65% Rule';
       $('totalInvest').textContent = fmt(totalInvest);
       $('profit').textContent = fmt(netProfit);
       $('profit').style.color = netProfit >= 0 ? 'var(--green)' : 'var(--red)';
