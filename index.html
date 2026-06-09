@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Deal Calculator — Purpose Group</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #0f1117;
+    --card: #1a1d27;
+    --border: #2a2d3a;
+    --accent: #6c5ce7;
+    --accent-light: #a29bfe;
+    --green: #00b894;
+    --red: #e17055;
+    --yellow: #fdcb6e;
+    --text: #f0f0f0;
+    --muted: #8a8a9a;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    padding: 24px;
+  }
+
+  header {
+    text-align: center;
+    margin-bottom: 32px;
+  }
+
+  header h1 {
+    font-size: 28px;
+    font-weight: 700;
+    background: linear-gradient(135deg, var(--accent-light), var(--accent));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+
+  header p {
+    color: var(--muted);
+    margin-top: 4px;
+    font-size: 14px;
+  }
+
+  .layout {
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 24px;
+  }
+
+  .card h2 {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--accent-light);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-size: 13px;
+  }
+
+  .field {
+    margin-bottom: 16px;
+  }
+
+  .field label {
+    display: block;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .field input, .field select {
+    width: 100%;
+    padding: 12px 14px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.2s;
+  }
+
+  .field input:focus, .field select:focus {
+    border-color: var(--accent);
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .results-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .result-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
+
+  .result-box.highlight {
+    grid-column: 1 / -1;
+    border-color: var(--accent);
+    background: linear-gradient(135deg, rgba(108,92,231,0.1), rgba(162,155,254,0.05));
+  }
+
+  .result-box .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .result-box .value {
+    font-size: 28px;
+    font-weight: 700;
+  }
+
+  .result-box .sub {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 4px;
+  }
+
+  .verdict {
+    margin-top: 20px;
+    padding: 16px 20px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 600;
+    font-size: 15px;
+    letter-spacing: 0.5px;
+  }
+
+  .verdict.good {
+    background: rgba(0,184,148,0.12);
+    border: 1px solid rgba(0,184,148,0.3);
+    color: var(--green);
+  }
+
+  .verdict.maybe {
+    background: rgba(253,203,110,0.12);
+    border: 1px solid rgba(253,203,110,0.3);
+    color: var(--yellow);
+  }
+
+  .verdict.bad {
+    background: rgba(225,112,85,0.12);
+    border: 1px solid rgba(225,112,85,0.3);
+    color: var(--red);
+  }
+
+  .strategy-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+  }
+
+  .strategy-tabs button {
+    flex: 1;
+    padding: 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .strategy-tabs button.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: white;
+  }
+
+  .strategy-tabs button:hover:not(.active) {
+    border-color: var(--accent-light);
+    color: var(--text);
+  }
+
+  .hold-fields { display: none; }
+  .hold-fields.visible { display: block; }
+
+  .bar-wrap {
+    margin-top: 16px;
+  }
+
+  .bar-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .bar {
+    height: 8px;
+    background: var(--bg);
+    border-radius: 4px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+  }
+
+  .bar-fill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.4s ease, background 0.4s ease;
+  }
+
+  .reset-btn {
+    margin-top: 16px;
+    width: 100%;
+    padding: 12px;
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .reset-btn:hover {
+    border-color: var(--red);
+    color: var(--red);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Deal Calculator</h1>
+  <p>Flip &amp; Hold Analysis — Purpose Group</p>
+</header>
+
+<div class="layout">
+  <div class="left">
+    <div class="card">
+      <h2>Property Details</h2>
+
+      <div class="field">
+        <label>After Repair Value (ARV)</label>
+        <input type="text" id="arv" placeholder="$250,000" inputmode="decimal">
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Purchase Price</label>
+          <input type="text" id="purchase" placeholder="$120,000" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>Repair Costs</label>
+          <input type="text" id="repairs" placeholder="$35,000" inputmode="decimal">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Closing Costs (%)</label>
+          <input type="text" id="closing" value="3" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>Holding Months</label>
+          <input type="text" id="holdMonths" value="6" inputmode="numeric">
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="field">
+          <label>Agent/Selling Costs (%)</label>
+          <input type="text" id="agentPct" value="6" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>Monthly Holding Cost</label>
+          <input type="text" id="monthlyHold" placeholder="$800" inputmode="decimal">
+        </div>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: 20px;">
+      <h2>Rental Analysis (Buy &amp; Hold)</h2>
+      <div class="row">
+        <div class="field">
+          <label>Monthly Rent</label>
+          <input type="text" id="rent" placeholder="$1,500" inputmode="decimal">
+        </div>
+        <div class="field">
+          <label>Monthly Expenses</label>
+          <input type="text" id="expenses" placeholder="$400" inputmode="decimal">
+        </div>
+      </div>
+      <div class="field">
+        <label>Down Payment (%)</label>
+        <input type="text" id="downPct" value="20" inputmode="decimal">
+      </div>
+    </div>
+
+    <button class="reset-btn" onclick="resetAll()">Reset All Fields</button>
+  </div>
+
+  <div class="right">
+    <div class="card">
+      <div class="strategy-tabs">
+        <button class="active" onclick="setTab('flip', this)">Flip</button>
+        <button onclick="setTab('hold', this)">Buy &amp; Hold</button>
+      </div>
+
+      <div id="flip-results">
+        <div class="results-grid">
+          <div class="result-box highlight">
+            <div class="label">Maximum Allowable Offer</div>
+            <div class="value" id="mao">—</div>
+            <div class="sub" id="mao-sub"></div>
+          </div>
+          <div class="result-box">
+            <div class="label">Total Investment</div>
+            <div class="value" id="totalInvest">—</div>
+          </div>
+          <div class="result-box">
+            <div class="label">Net Profit</div>
+            <div class="value" id="profit">—</div>
+          </div>
+          <div class="result-box">
+            <div class="label">ROI</div>
+            <div class="value" id="roi">—</div>
+          </div>
+          <div class="result-box">
+            <div class="label">Profit / Month</div>
+            <div class="value" id="profitMonth">—</div>
+          </div>
+        </div>
+
+        <div class="bar-wrap">
+          <div class="bar-label">
+            <span>Deal Margin</span>
+            <span id="margin-pct">—</span>
+          </div>
+          <div class="bar"><div class="bar-fill" id="margin-bar" style="width:0%;background:var(--red)"></div></div>
+        </div>
+
+        <div class="verdict bad" id="flip-verdict">Enter numbers to analyze</div>
+      </div>
+
+      <div id="hold-results" style="display:none;">
+        <div class="results-grid">
+          <div class="result-box highlight">
+            <div class="label">Monthly Cash Flow</div>
+            <div class="value" id="cashflow">—</div>
+          </div>
+          <div class="result-box">
+            <div class="label">Cash on Cash Return</div>
+            <div class="value" id="coc">—</div>
+          </div>
+          <div class="result-box">
+            <div class="label">Cap Rate</div>
+            <div class="value" id="caprate">—</div>
+          </div>
+          <div class="result-box">
+            <div class="label">Total Cash Needed</div>
+            <div class="value" id="cashNeeded">—</div>
+          </div>
+          <div class="result-box">
+            <div class="label">Annual NOI</div>
+            <div class="value" id="noi">—</div>
+          </div>
+          <div class="result-box">
+            <div class="label">GRM</div>
+            <div class="value" id="grm">—</div>
+          </div>
+        </div>
+
+        <div class="bar-wrap">
+          <div class="bar-label">
+            <span>Cash on Cash</span>
+            <span id="coc-pct">—</span>
+          </div>
+          <div class="bar"><div class="bar-fill" id="coc-bar" style="width:0%;background:var(--red)"></div></div>
+        </div>
+
+        <div class="verdict bad" id="hold-verdict">Enter numbers to analyze</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  const $ = id => document.getElementById(id);
+
+  function num(id) {
+    return parseFloat($( id).value.replace(/[^0-9.\-]/g, '')) || 0;
+  }
+
+  function fmt(n) {
+    if (Math.abs(n) >= 1000) {
+      return '$' + Math.round(n).toLocaleString('en-US');
+    }
+    return '$' + Math.round(n).toLocaleString('en-US');
+  }
+
+  function pct(n) {
+    return n.toFixed(1) + '%';
+  }
+
+  function formatInput(e) {
+    const el = e.target;
+    const raw = el.value.replace(/[^0-9.\-]/g, '');
+    if (raw && !isNaN(raw) && !raw.endsWith('.')) {
+      const n = parseFloat(raw);
+      if (el.id === 'closing' || el.id === 'agentPct' || el.id === 'holdMonths' || el.id === 'downPct') {
+        el.value = raw;
+      } else {
+        el.value = '$' + Math.round(n).toLocaleString('en-US');
+      }
+    }
+    calculate();
+  }
+
+  function setTab(tab, btn) {
+    document.querySelectorAll('.strategy-tabs button').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    $('flip-results').style.display = tab === 'flip' ? 'block' : 'none';
+    $('hold-results').style.display = tab === 'hold' ? 'block' : 'none';
+  }
+
+  function calculate() {
+    const arv = num('arv');
+    const purchase = num('purchase');
+    const repairs = num('repairs');
+    const closingPct = num('closing') / 100;
+    const months = num('holdMonths') || 6;
+    const agentPct = num('agentPct') / 100;
+    const monthlyHold = num('monthlyHold');
+
+    // Flip
+    const closingBuy = purchase * closingPct;
+    const closingSell = arv * closingPct;
+    const agentFee = arv * agentPct;
+    const holdingTotal = monthlyHold * months;
+    const totalCosts = purchase + repairs + closingBuy + closingSell + agentFee + holdingTotal;
+    const netProfit = arv - totalCosts;
+    const totalInvest = purchase + repairs + closingBuy + holdingTotal;
+    const roiVal = totalInvest > 0 ? (netProfit / totalInvest) * 100 : 0;
+    const profitPerMonth = months > 0 ? netProfit / months : 0;
+
+    // MAO using 65% rule
+    const mao = (arv * 0.65) - repairs;
+    const maoVsPurchase = purchase > 0 ? ((purchase - mao) / mao) * 100 : 0;
+
+    // Margin
+    const marginVal = arv > 0 ? (netProfit / arv) * 100 : 0;
+
+    if (arv > 0 || purchase > 0) {
+      $('mao').textContent = fmt(mao);
+      $('mao-sub').textContent = purchase > 0
+        ? (purchase <= mao ? `${fmt(mao - purchase)} under MAO` : `${fmt(purchase - mao)} over MAO`)
+        : '70% Rule';
+      $('totalInvest').textContent = fmt(totalInvest);
+      $('profit').textContent = fmt(netProfit);
+      $('profit').style.color = netProfit >= 0 ? 'var(--green)' : 'var(--red)';
+      $('roi').textContent = pct(roiVal);
+      $('roi').style.color = roiVal >= 15 ? 'var(--green)' : roiVal >= 0 ? 'var(--yellow)' : 'var(--red)';
+      $('profitMonth').textContent = fmt(profitPerMonth);
+      $('profitMonth').style.color = profitPerMonth >= 0 ? 'var(--green)' : 'var(--red)';
+
+      const barW = Math.min(Math.max(marginVal, 0), 40);
+      $('margin-bar').style.width = (barW / 40 * 100) + '%';
+      $('margin-bar').style.background = marginVal >= 15 ? 'var(--green)' : marginVal >= 8 ? 'var(--yellow)' : 'var(--red)';
+      $('margin-pct').textContent = pct(marginVal);
+
+      const v = $('flip-verdict');
+      if (netProfit >= 30000 && purchase <= mao) {
+        v.className = 'verdict good';
+        v.textContent = 'Strong Deal — Pull the trigger';
+      } else if (netProfit >= 15000) {
+        v.className = 'verdict maybe';
+        v.textContent = 'Decent Deal — Negotiate harder';
+      } else if (netProfit > 0) {
+        v.className = 'verdict maybe';
+        v.textContent = 'Thin Margins — Risky flip';
+      } else {
+        v.className = 'verdict bad';
+        v.textContent = 'No Deal — Walk away';
+      }
+    }
+
+    // Hold
+    const rent = num('rent');
+    const exp = num('expenses');
+    const downPct = num('downPct') / 100;
+
+    if (rent > 0) {
+      const totalProp = purchase + repairs + closingBuy;
+      const downPayment = totalProp * downPct;
+      const cashNeeded = downPayment + repairs + closingBuy;
+      const monthlyNOI = rent - exp;
+      const annualNOI = monthlyNOI * 12;
+      const cocReturn = cashNeeded > 0 ? (annualNOI / cashNeeded) * 100 : 0;
+      const capRate = totalProp > 0 ? (annualNOI / totalProp) * 100 : 0;
+      const grm = rent > 0 ? totalProp / (rent * 12) : 0;
+
+      $('cashflow').textContent = fmt(monthlyNOI);
+      $('cashflow').style.color = monthlyNOI >= 0 ? 'var(--green)' : 'var(--red)';
+      $('coc').textContent = pct(cocReturn);
+      $('coc').style.color = cocReturn >= 10 ? 'var(--green)' : cocReturn >= 6 ? 'var(--yellow)' : 'var(--red)';
+      $('caprate').textContent = pct(capRate);
+      $('caprate').style.color = capRate >= 8 ? 'var(--green)' : capRate >= 5 ? 'var(--yellow)' : 'var(--red)';
+      $('cashNeeded').textContent = fmt(cashNeeded);
+      $('noi').textContent = fmt(annualNOI);
+      $('noi').style.color = annualNOI >= 0 ? 'var(--green)' : 'var(--red)';
+      $('grm').textContent = grm.toFixed(1) + 'x';
+
+      const cocBar = Math.min(Math.max(cocReturn, 0), 25);
+      $('coc-bar').style.width = (cocBar / 25 * 100) + '%';
+      $('coc-bar').style.background = cocReturn >= 10 ? 'var(--green)' : cocReturn >= 6 ? 'var(--yellow)' : 'var(--red)';
+      $('coc-pct').textContent = pct(cocReturn);
+
+      const hv = $('hold-verdict');
+      if (monthlyNOI >= 300 && cocReturn >= 10) {
+        hv.className = 'verdict good';
+        hv.textContent = 'Cash Cow — Lock it down';
+      } else if (monthlyNOI >= 100) {
+        hv.className = 'verdict maybe';
+        hv.textContent = 'Okay Hold — Check rent comps';
+      } else {
+        hv.className = 'verdict bad';
+        hv.textContent = 'Negative Flow — Not worth holding';
+      }
+    }
+  }
+
+  function resetAll() {
+    document.querySelectorAll('input').forEach(el => {
+      if (['closing', 'agentPct'].includes(el.id)) el.value = el.id === 'closing' ? '3' : '6';
+      else if (el.id === 'holdMonths') el.value = '6';
+      else if (el.id === 'downPct') el.value = '20';
+      else el.value = '';
+    });
+    ['mao','totalInvest','profit','roi','profitMonth','cashflow','coc','caprate','cashNeeded','noi','grm'].forEach(id => {
+      $(id).textContent = '—';
+      $(id).style.color = '';
+    });
+    $('mao-sub').textContent = '';
+    $('margin-pct').textContent = '—';
+    $('coc-pct').textContent = '—';
+    $('margin-bar').style.width = '0%';
+    $('coc-bar').style.width = '0%';
+    $('flip-verdict').className = 'verdict bad';
+    $('flip-verdict').textContent = 'Enter numbers to analyze';
+    $('hold-verdict').className = 'verdict bad';
+    $('hold-verdict').textContent = 'Enter numbers to analyze';
+  }
+
+  document.querySelectorAll('input').forEach(el => {
+    el.addEventListener('input', calculate);
+    el.addEventListener('blur', formatInput);
+  });
+</script>
+</body>
+</html>
